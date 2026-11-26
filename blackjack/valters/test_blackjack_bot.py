@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from blackjack_bot import (
+from blackjack.valters.bot import (
     STARTING_BANKROLL,
     SPEED_DELAYS,
     BlackjackGame,

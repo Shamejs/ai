@@ -17,6 +17,8 @@ except ImportError:  # pragma: no cover - depends on the Python installation
     tk = ttk = None
 
 
+BOT_NAME: str = "Valters"
+
 RANKS = ("2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A")
 SUITS = ("S", "H", "D", "C")
 TRAINING_FILE = Path(__file__).with_name("blackjack_training.json")
@@ -434,7 +436,6 @@ class TrainingData:
                 raise ValueError("training values must be integers")
             return cls(**values)
         except (OSError, ValueError):  # JSONDecodeError is a ValueError
-            # Keep the unreadable file for inspection instead of overwriting it.
             try:
                 path.replace(path.with_suffix(path.suffix + ".corrupt"))
             except OSError:
@@ -508,7 +509,6 @@ class BlackjackGame:
 
         self._round_start_bankroll = self.bankroll
         self.round_strategy_profile = self.strategy_profile
-        # Whole betting units only, so 3:2 payouts and insurance stay exact.
         bet = self.next_bet
         self.bankroll -= bet
         self.dealer = []
@@ -890,7 +890,7 @@ class BlackjackWindow:
     def _stop_auto(self) -> None:
         self.auto_playing = False
         if self._auto_job is not None:
-            self.root.after_cancel(self._auto_job)  # no stacked timers on Stop/Auto
+            self.root.after_cancel(self._auto_job)
             self._auto_job = None
         self.auto_button.configure(text="Start")
         self.starting_amount_entry.configure(state="normal")
@@ -957,7 +957,7 @@ class BlackjackWindow:
                     f"{marker}Bot hand {index + 1}: {'  '.join(map(str, hand.cards))} "
                     f"(total {total}, bet ${hand.bet})"
                 )
-            player_text = "\n".join(lines)
+            player_text = "".join(lines)
         else:
             player_text = "Bot hand: —"
         self.player_label.configure(text=player_text)
@@ -978,6 +978,70 @@ class BlackjackWindow:
                 + (f" · {self.game.save_error}" if self.game.save_error else "")
             )
         )
+
+
+# === TURNĪRA SASKARNE ===
+_CACHED_PROFILE: StrategyProfile | None = None
+
+
+def _get_profile() -> StrategyProfile:
+    global _CACHED_PROFILE
+    if _CACHED_PROFILE is None:
+        try:
+            _CACHED_PROFILE = StrategyProfile.load()
+        except Exception:
+            _CACHED_PROFILE = StrategyProfile()
+    return _CACHED_PROFILE
+
+
+def _parse_card(card_str: str) -> Card:
+    rank = card_str[:-1].upper()
+    if rank == "T":
+        rank = "10"
+    suit = card_str[-1].upper()
+    return Card(rank=rank, suit=suit)
+
+
+def _true_count_from_history(history: list[str], decks_remaining: float) -> float:
+    running = sum(_parse_card(c).hi_lo_value for c in history)
+    return running / max(float(decks_remaining), 0.25)
+
+
+def place_bet(bankroll: int, history: list[str], decks_remaining: float) -> int:
+    bankroll = int(bankroll)
+    if bankroll < 10:
+        return max(1, bankroll)
+    tc = _true_count_from_history(history, decks_remaining)
+    units = wager_units(tc, risk_level=2, profile=_get_profile())
+    bet = 10 * units
+    return max(10, min(200, bankroll, bet))
+
+
+def decide_action(
+    hand: list[str],
+    dealer_upcard: str,
+    history: list[str],
+    can_double: bool,
+    can_split: bool,
+) -> str:
+    profile = _get_profile()
+    cards = [_parse_card(c) for c in hand]
+    upcard = _parse_card(dealer_upcard)
+    decks_rem = max((4 * 52 - len(history)) / 52, 0.25)
+    tc = _true_count_from_history(history, decks_rem)
+
+    action, _ = choose_action(
+        cards=cards,
+        dealer_upcard=upcard,
+        true_count=tc,
+        risk_level=2,
+        can_double=can_double,
+        can_split=can_split,
+        deviation_threshold=profile.deviation_threshold,
+        split_tens_threshold=profile.split_tens_threshold,
+    )
+    return action.upper()
+
 
 def main() -> None:
     if tk is None:
