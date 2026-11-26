@@ -6,8 +6,8 @@ from typing import Protocol, Sequence
 
 BOT_NAME: str = "zanylegoat"
 DECK_COUNT = 4
-SIMULATIONS = 8192
-MAX_SIMULATIONS = 16384
+SIMULATIONS = 4096
+MAX_SIMULATIONS = 8192
 LEARNING_MIN_SAMPLES = 20
 EV_TIE_MARGIN = 0.025
 _CARD_VALUES = tuple(range(1, 11))
