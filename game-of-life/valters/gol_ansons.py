@@ -8,7 +8,7 @@
 # Pattern palette.
 # Eight starting patterns are included: Glider, LWSS, Blinker, Toad, Beehive, Block, R-pentomino, and Acorn.
 # They can be dragged onto the grid.
-# Pattern effects.
+# Pattern effects.wedqwqwdqw 
 # Pattern placement supports "Still" and "Pulse" modes; pulsing patterns are periodically added and removed.
 # Simulation controls.
 # You can pause and resume the simulation, step once, reset, or generate a new random start.
