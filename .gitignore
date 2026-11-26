@@ -1,1 +1,3 @@
-game-of-life/zane/__pycache__/multiplayer_game.cpython-314.pyc
+__pycache__/
+*.py[cod]
+*$py.class

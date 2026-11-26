@@ -1,0 +1,14 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Blackjack GUI",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/blackjack/gui.py",
+            "cwd": "${workspaceFolder}/blackjack",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+    ]
+}
